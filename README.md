@@ -1,4 +1,4 @@
-#!!MOVED TO GITHUB: https://github.com/Geigerkind!!#
+#!!ORIGINAL FILES: https://bitbucket.org/tomdy/dpsmate/get/6d49147d8dcb.zip
 # DPSMate #
 #A combat analyzation tool#
 
