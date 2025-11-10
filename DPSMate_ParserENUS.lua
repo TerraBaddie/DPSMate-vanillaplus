@@ -6,6 +6,7 @@ local npcdb = DPSMate.NPCDB
 local GT = GetTime
 local strsub = string.sub
 
+if not DPSMate.Parser then DPSMate.Parser = {} end
 ----------------------------------------------------------------------------------
 --------------                    Damage Done                       --------------                                  
 ----------------------------------------------------------------------------------
@@ -613,6 +614,29 @@ function DPSMate.Parser:SpellSelfBuff(msg)
 		end
 		return
 	end	
+end
+
+----------------------------------------------------------------------------------
+--------------                      Mana Gains                      --------------        
+----------------------------------------------------------------------------------
+
+function DPSMate.Parser:SpellPeriodicSelfManaGained(msg)
+    for amount, source in strgfind(msg, "You gain (%d+) Mana from (.+)%.") do
+        local manaAmount = tnbr(amount)
+        local target = self.player -- Ensure self.player is correctly defined
+
+        -- Send data to DPSMate_DB to track mana gained
+        if DB and DB.ManaGained then
+            DB:ManaGained(target, manaAmount, source)
+        else
+            DPSMate:SendMessage("❌ ERROR: DB.ManaGained is missing!")
+        end
+
+        
+        --DPSMate:SendMessage("Mana Gained: " .. manaAmount .. " from " .. source)
+        
+        return
+    end
 end
 
 -- You gain First Aid.
