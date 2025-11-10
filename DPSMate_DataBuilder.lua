@@ -360,6 +360,12 @@ function DPSMate.DB:OnEvent(event)
 					[1] = true,
 					[2] = true,
 				},
+				columnsmana = {
+					[1] = true,
+					[2] = false,
+					[3] = true,
+					[4] = false,
+				},
 				columnsaurauptime = {
 					[1] = true,
 					[2] = true,
@@ -438,6 +444,7 @@ function DPSMate.DB:OnEvent(event)
 				Interrupts = {},
 				Dispels = {},
 				Auras = {},
+				ManaGained = {},
 				Threat = {},
 				Fail = {},
 				CCBreaker = {}
@@ -460,6 +467,7 @@ function DPSMate.DB:OnEvent(event)
 		if DPSMateDeaths == nil then DPSMateDeaths = {[1]={},[2]={}} end
 		if DPSMateInterrupts == nil then DPSMateInterrupts = {[1]={},[2]={}} end
 		if DPSMateAurasGained == nil then DPSMateAurasGained = {[1]={},[2]={}} end
+		if DPSMateManaGained == nil then DPSMateManaGained = {[1]={},[2]={}} end
 		if DPSMateThreat == nil then DPSMateThreat = {[1]={},[2]={}} end
 		if DPSMateFails == nil then DPSMateFails = {[1]={},[2]={}} end
 		if DPSMateCCBreaker == nil then DPSMateCCBreaker = {[1]={},[2]={}} end
@@ -503,6 +511,7 @@ function DPSMate.DB:OnEvent(event)
 		DPSMate.Modules.AurasLost.DB = DPSMateAurasGained
 		DPSMate.Modules.AurasUptimers.DB = DPSMateAurasGained
 		DPSMate.Modules.Procs.DB = DPSMateAurasGained
+		DPSMate.Modules.ManaGained.DB = DPSMateManaGained
 		DPSMate.Modules.Casts.DB = DPSMateEDT
 		DPSMate.Modules.Threat.DB = DPSMateThreat
 		DPSMate.Modules.TPS.DB = DPSMateThreat
@@ -516,6 +525,14 @@ function DPSMate.DB:OnEvent(event)
 			DPSMateSettings["columnsprocs"] = {
 				[1] = true,
 				[2] = true,
+			}
+		end
+		if not DPSMateSettings["columnsmana"] then
+			DPSMateSettings["columnsmana"] = {
+				[1] = true,
+				[2] = false,
+				[3] = true,
+				[4] = false
 			}
 		end
 		if not DPSMateSettings["columnscasts"] then
@@ -2455,4 +2472,65 @@ function DPSMate.DB:CCBreaker(target, ability, cause)
 			[4] = GameTime_GetTime()
 		})
 	end
+end
+
+function DPSMate.DB:ManaGained(target, manaAmount, source)
+    -- Prevent tracking mana gained outside of combat
+    if not CombatState then return end
+
+    -- Validate target and source
+    if not target or not manaAmount or not source then
+        -- DPSMate:SendMessage("ERROR: Invalid ManaGained call. Missing target, manaAmount, or source!")
+        return
+    end
+
+    -- Ensure user and ability exist
+    if self:BuildUser(target, nil) or self:BuildAbility(source, nil) then
+        -- DPSMate:SendMessage("Skipping ManaGained logging due to BuildUser or BuildAbility failure.")
+        return
+    end
+
+    -- Iterate over 'total' and 'current' categories
+    for cat, val in pairs({[1] = "total", [2] = "current"}) do 
+        -- Ensure category exists in DPSMateManaGained
+        if not DPSMateManaGained[cat] then
+            DPSMateManaGained[cat] = {}
+            -- DPSMate:SendMessage("DPSMateManaGained[" .. cat .. "] was nil, initialized!")
+        end
+
+        -- Ensure user exists in the table
+        local userID = DPSMateUser[target][1]
+        if not DPSMateManaGained[cat][userID] then
+            DPSMateManaGained[cat][userID] = { i = 0 }
+            -- DPSMate:SendMessage("Created new entry for user " .. target .. " in DPSMateManaGained[" .. cat .. "]")
+        end
+
+        -- Ensure ability exists for the user
+        local abilityID = DPSMateAbility[source][1]
+        if not DPSMateManaGained[cat][userID][abilityID] then
+            DPSMateManaGained[cat][userID][abilityID] = {
+                [1] = 0, -- Mana gained amount
+                [2] = 0, -- Instances
+                ["i"] = {}
+            }
+            -- DPSMate:SendMessage("Created new entry for ability " .. source .. " in DPSMateManaGained[" .. cat .. "][" .. target .. "]")
+        end
+
+        -- Update mana gained and instances count
+        local path = DPSMateManaGained[cat][userID][abilityID]
+        path[1] = path[1] + manaAmount
+        path[2] = path[2] + 1
+
+        -- Store data over time
+        local time = floor(DPSMateCombatTime[val] or 0)
+        if not path["i"][time] then
+            path["i"][time] = 0
+        end
+        path["i"][time] = path["i"][time] + manaAmount
+
+        -- DPSMate:SendMessage("ManaGained Logged: " .. manaAmount .. " from " .. source .. " (User: " .. target .. ", Category: " .. cat .. ")")
+    end
+
+    -- Flag for update
+    self.NeedUpdate = true
 end
