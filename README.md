@@ -1,4 +1,6 @@
-#!!ORIGINAL FILES: https://bitbucket.org/tomdy/dpsmate/get/6d49147d8dcb.zip
+#!!ORIGINAL CREATOR & FILES:
+https://bitbucket.org/tomdy/dpsmate/downloads/
+https://bitbucket.org/tomdy/dpsmate/get/6d49147d8dcb.zip
 # DPSMate #
 #A combat analyzation tool#
 
