@@ -8,6 +8,8 @@ I take no credit for this addon I am only improving upon it.
 
 Specifically Personal Mana Gained info (You gain) does not sync or calculate other's mana gained.
 
+#!!SOMETIME IN THE FUTURE I WANT THIS MANA GAINED MODULE IVE PUT 1 YEARS WORTH OF TIME INTO WORKING FOR ALL RAID MEMBERS BUT FOR NOW ONLY WORKS FOR YOUR CHARACTER ANY FORKS OR COMMITS ARE WELCOME
+
 # DPSMate #
 #A combat analyzation tool#
 
