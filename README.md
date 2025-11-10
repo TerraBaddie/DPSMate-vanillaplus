@@ -1,6 +1,12 @@
+RENAME FOLDER TO DPSMate
+
 #!!ORIGINAL CREATOR: https://bitbucket.org/tomdy/dpsmate/downloads/
+
 #!!DIRECT ZIP TO ORIGIN: https://bitbucket.org/tomdy/dpsmate/get/6d49147d8dcb.zip
+
 I take no credit for this addon I am only improving upon it.
+Specifically Personal Mana Gained info (You gain) does not sync or calculate other's mana gained
+
 # DPSMate #
 #A combat analyzation tool#
 
