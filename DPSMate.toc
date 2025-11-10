@@ -4,7 +4,7 @@
 ## Notes-deDE: DPSMate ist ein Analysewerkzeug, das hilfreiche Graphen und Statistiken bereitstellt, um den Kampf zu evaluieren.
 ## Author: Shino <Synced> - Kronos
 ## SavedVariables: DPSMateSettings
-## SavedVariablesPerCharacter: DPSMateUser, DPSMateAbility, DPSMateDamageDone, DPSMateEDT, DPSMateEDD, DPSMateDamageTaken, DPSMateDispels, DPSMateInterrupts, DPSMateDeaths, DPSMateEHealing, DPSMateTHealing, DPSMateHealingTaken, DPSMateEHealingTaken, DPSMateOverhealing, DPSMateOverhealingTaken, DPSMateAbsorbs, DPSMateThreat, DPSMateAurasGained, DPSMateCombatTime, DPSMateHistory, DPSMateAttempts, DPSMatePlayer, DPSMateLoot, DPSMateFails, DPSMateCCBreaker
+## SavedVariablesPerCharacter: DPSMateUser, DPSMateAbility, DPSMateDamageDone, DPSMateEDT, DPSMateEDD, DPSMateDamageTaken, DPSMateDispels, DPSMateInterrupts, DPSMateDeaths, DPSMateEHealing, DPSMateTHealing, DPSMateHealingTaken, DPSMateEHealingTaken, DPSMateOverhealing, DPSMateOverhealingTaken, DPSMateAbsorbs, DPSMateThreat, DPSMateAurasGained, DPSMateCombatTime, DPSMateHistory, DPSMateAttempts, DPSMatePlayer, DPSMateLoot, DPSMateFails, DPSMateCCBreaker, DPSMateManaGained
 ## OptionalDeps: KLHThreatMeter
 
 libs\AceLibrary\AceLibrary.lua
@@ -20,9 +20,9 @@ DPSMate.lua
 localization\enUS.lua
 localization\deDE.lua
 
-DPSMate_Parser.lua
 DPSMate_ParserENUS.lua
 DPSMate_ParserDEDE.lua
+DPSMate_Parser.lua
 DPSMate_Options.lua
 DPSMate_Sync.lua
 DPSMate_Realmplayers.lua
@@ -197,6 +197,8 @@ modules\DPSMate_Details_Threat.lua
 modules\DPSMate_Details_Threat.xml
 modules\DPSMate_Details_ThreatTotal.lua
 modules\DPSMate_Details_ThreatTotal.xml
+modules\DPSMate_Details_ManaGained.lua
+modules\DPSMate_Details_ManaGained.xml
 
 DPSMate_Frame.xml
 DPSMate_Options.xml
