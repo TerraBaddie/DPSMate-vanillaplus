@@ -836,6 +836,7 @@ function DPSMate.Options:PopUpAccept(bool, bypass)
 			DPSMateDeaths = {[1]={},[2]={}}
 			DPSMateInterrupts = {[1]={},[2]={}}
 			DPSMateAurasGained = {[1]={},[2]={}}
+			DPSMateManaGained = {[1]={},[2]={}}
 			DPSMateThreat = {[1]={},[2]={}}
 			DPSMateFails = {[1]={},[2]={}}
 			DPSMateCCBreaker = {[1]={},[2]={}}
@@ -856,6 +857,7 @@ function DPSMate.Options:PopUpAccept(bool, bypass)
 				Interrupts = {},
 				Dispels = {},
 				Auras = {},
+				ManaGained = {},
 				Threat = {},
 				Fails = {},
 				CCBreaker = {}
@@ -917,6 +919,7 @@ function DPSMate.Options:PopUpAccept(bool, bypass)
 			DPSMateDeaths[2] = {}
 			DPSMateInterrupts[2] = {}
 			DPSMateAurasGained[2] = {}
+			DPSMateManaGained[2] = {}
 			DPSMateThreat[2] = {}
 			DPSMateFails[2] = {}
 			DPSMateCCBreaker[2] = {}
@@ -956,6 +959,7 @@ function DPSMate.Options:PopUpAccept(bool, bypass)
 		DPSMate.Modules.AurasLost.DB = DPSMateAurasGained
 		DPSMate.Modules.AurasUptimers.DB = DPSMateAurasGained
 		DPSMate.Modules.Procs.DB = DPSMateAurasGained
+		DPSMate.Modules.ManaGained.DB = DPSMateManaGained
 		DPSMate.Modules.Casts.DB = DPSMateEDT
 		DPSMate.Modules.Threat.DB = DPSMateThreat
 		DPSMate.Modules.TPS.DB = DPSMateThreat
@@ -1488,57 +1492,78 @@ function DPSMate.Options:Report()
 	DPSMate_Report:Hide()
 end
 
-local AbilityModes = {"damage", "dps", "healing", "hps", "OHPS", "overhealing", "effectivehealing", "effectivehps", "deaths", "interrupts", "dispels", "decurses", "curedisease", "curepoison", "liftmagic", "aurasgained", "auraslost", "aurasuptime", "procs", "casts", "ccbreaker"}
+local AbilityModes = {"damage", "dps", "healing", "hps", "OHPS", "overhealing", "effectivehealing", "effectivehps", "deaths", "interrupts", "dispels", "decurses", "curedisease", "curepoison", "liftmagic", "aurasgained", "auraslost", "managained", "aurasuptime", "procs", "casts", "ccbreaker"}
 function DPSMate.Options:ReportUserDetails(obj, channel, name)
 	local Key, user = obj:GetParent():GetParent():GetParent().Key, obj.user
 	local _, cbt, ecbt = DPSMate:GetMode(Key)
-	local a,b,c
+	local a, b, c
+
 	if DPSMateSettings["windows"][Key]["CurMode"] == "deaths" then
-		a,b,c = DPSMate.RegistredModules[DPSMateSettings["windows"][Key]["CurMode"]]:EvalTable(DPSMateUser[user], Key)
+		a, b, c = DPSMate.RegistredModules[DPSMateSettings["windows"][Key]["CurMode"]]:EvalTable(DPSMateUser[user], Key)
 	else
-		a,b,c = DPSMate.RegistredModules[DPSMateSettings["windows"][Key]["CurMode"]]:EvalTable(DPSMateUser[user], Key, cbt, ecbt)
+		a, b, c = DPSMate.RegistredModules[DPSMateSettings["windows"][Key]["CurMode"]]:EvalTable(DPSMateUser[user], Key, cbt, ecbt)
 	end
+
+	-- Ensure a, b, and c are not nil
+	if not a then a = {} end
+	if not b then b = 0 end
+	if not c then c = {} end
+
 	local chn, index
 	if (channel == DPSMate.L["whisper"]) then
-		chn = "WHISPER"; index = name;
+		chn = "WHISPER"; index = name
 	elseif DPSMate:TContains(DPSMate.L["gchannel"], channel) then
 		chn = strupper(channel)
 	else
 		chn = "CHANNEL"; index = GetChannelName(channel)
 	end
+
 	local bb = ""
-	if not b and not a then
-		return
+	if b ~= 0 then
+		bb = " - " .. strformat("%.2f", b)
 	end
-	if b~=0 then
-		bb = " - "..strformat("%.2f", b)
-	end
-	SendChatMessage(DPSMate.L["name"].." - "..DPSMate.L["reportof"].." "..user.."'s ".._G("DPSMate_"..DPSMateSettings["windows"][Key]["name"].."_Head_Font"):GetText().." - "..DPSMate:GetModeName(Key)..bb, chn, nil, index)
-	for i=1, 10 do
-		if (not a[i]) then break end
+
+	local windowName = DPSMateSettings["windows"][Key] and DPSMateSettings["windows"][Key]["name"] or "Unknown Window"
+	local headerFont = _G("DPSMate_"..windowName.."_Head_Font") and _G("DPSMate_"..windowName.."_Head_Font"):GetText() or "Unknown"
+
+	SendChatMessage(DPSMate.L["name"].." - "..DPSMate.L["reportof"].." "..(user or "Unknown").."'s "..headerFont.." - "..DPSMate:GetModeName(Key)..bb, chn, nil, index)
+
+	for i = 1, 10 do
+		if not a[i] then break end
+		if not c[i] then c[i] = 0 end -- Ensure c[i] is not nil
+
+		local abilityName = a[i] and DPSMate:GetAbilityById(a[i]) or "Unknown Ability"
+		local userName = a[i] and DPSMate:GetUserById(a[i]) or "Unknown User"
+
 		local p
-		if type(c[i])=="table" then p = strformat("%.2f", c[i][1]).." ("..strformat("%.2f", 100*c[i][1]/b).."%)" else p = strformat("%.2f", c[i]).." ("..strformat("%.2f", 100*c[i]/b).."%)" end
+		if type(c[i]) == "table" then
+			p = strformat("%.2f", c[i][1] or 0).." ("..strformat("%.2f", (c[i][1] or 0) * 100 / (b ~= 0 and b or 1)).."%)"
+		else
+			p = strformat("%.2f", c[i]).." ("..strformat("%.2f", (c[i] * 100) / (b ~= 0 and b or 1)).."%)"
+		end
+
 		if DPSMateSettings["windows"][Key]["CurMode"] == "deaths" then
-			local type = " (HIT)"
-			if c[i][3]==1 then type=" (CRIT)" elseif c[i][3]==2 then type=" (CRUSH)" end
-			if c[i][2]==1 then
-				SendChatMessage(i..". |cFF8cff80"..DPSMate:GetAbilityById(a[i]).." => ".."+"..c[i][1]..type.."|r", chn, nil, index)
+			local hitType = " (HIT)"
+			if c[i][3] == 1 then hitType = " (CRIT)" elseif c[i][3] == 2 then hitType = " (CRUSH)" end
+			if c[i][2] == 1 then
+				SendChatMessage(i..". |cFF8cff80"..abilityName.." => ".."+"..(c[i][1] or 0)..hitType.."|r", chn, nil, index)
 			else
-				SendChatMessage(i..". |cFFFF8080"..DPSMate:GetAbilityById(a[i]).." => ".."-"..c[i][1]..type.."|r", chn, nil, index)
+				SendChatMessage(i..". |cFFFF8080"..abilityName.." => ".."-"..(c[i][1] or 0)..hitType.."|r", chn, nil, index)
 			end
 		else
 			if DPSMateSettings["windows"][Key]["CurMode"] == "fails" then
-				SendChatMessage(i..". "..DPSMate.Modules.Fails:Type(a[i]).." - "..p, chn, nil, index)
+				SendChatMessage(i..". "..DPSMate.Modules.Fails:Type(a[i] or "Unknown").." - "..p, chn, nil, index)
 			else
 				if DPSMate:TContains(AbilityModes, DPSMateSettings["windows"][Key]["CurMode"]) then
-					SendChatMessage(i..". "..DPSMate:GetAbilityById(a[i]).." - "..p, chn, nil, index)
+					SendChatMessage(i..". "..abilityName.." - "..p, chn, nil, index)
 				else
-					SendChatMessage(i..". "..DPSMate:GetUserById(a[i]).." - "..p, chn, nil, index)
+					SendChatMessage(i..". "..userName.." - "..p, chn, nil, index)
 				end
 			end
 		end
 	end
 end
+
 
 local hexClassColor = {
 	warrior = "C79C6E",
@@ -1687,6 +1712,7 @@ function DPSMate.Options:NewSegment(segname)
 		DPSMateInterrupts[2] = {}
 		DPSMateDispels[2] = {}
 		DPSMateAurasGained[2] = {}
+		DPSMateManaGained[2] = {}
 		DPSMateThreat[2] = {}
 		DPSMateFails[2] = {}
 		DPSMateCCBreaker[2] = {}
@@ -1699,7 +1725,7 @@ end
 
 function DPSMate.Options:CreateSegment(name)
 	-- Need to add a new check
-	local modes = {["DMGDone"] = DPSMateDamageDone[2], ["DMGTaken"] = DPSMateDamageTaken[2], ["EDDone"] = DPSMateEDD[2], ["EDTaken"] = DPSMateEDT[2], ["THealing"] = DPSMateTHealing[2], ["EHealing"] = DPSMateEHealing[2], ["OHealing"] = DPSMateOverhealing[2], ["EHealingTaken"] = DPSMateEHealingTaken[2], ["THealingTaken"] = DPSMateHealingTaken[2], ["Absorbs"] = DPSMateAbsorbs[2], ["Deaths"] = DPSMateDeaths[2], ["Interrupts"] = DPSMateInterrupts[2], ["Dispels"] = DPSMateDispels[2], ["Auras"] = DPSMateAurasGained[2]}
+	local modes = {["DMGDone"] = DPSMateDamageDone[2], ["DMGTaken"] = DPSMateDamageTaken[2], ["EDDone"] = DPSMateEDD[2], ["EDTaken"] = DPSMateEDT[2], ["THealing"] = DPSMateTHealing[2], ["EHealing"] = DPSMateEHealing[2], ["OHealing"] = DPSMateOverhealing[2], ["EHealingTaken"] = DPSMateEHealingTaken[2], ["THealingTaken"] = DPSMateHealingTaken[2], ["Absorbs"] = DPSMateAbsorbs[2], ["Deaths"] = DPSMateDeaths[2], ["Interrupts"] = DPSMateInterrupts[2], ["Dispels"] = DPSMateDispels[2], ["Auras"] = DPSMateAurasGained[2], ["ManaGained"] = DPSMateManaGained[2]}
 	
 	tinsert(DPSMateHistory["names"], 1, name.." - "..GameTime_GetTime())
 	for cat, val in pairs(modes) do
