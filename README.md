@@ -16,6 +16,8 @@ Specifically Personal Mana Gained info (You gain) does not sync or calculate oth
 #What is DPSMate?#
 DPSMate is not only a meter which shows numbers of the raid, such as damage done, damage taken, dispells etc., it is moreover an analyzing tool to review the raid or the previous fight as accurately as possible. This data can help to improve the gameplay or to judge better over someones performance.
 
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/66244830-f0eb-499e-9d34-de44a65a70ec" />
+
 ![img](http://i.imgur.com/UWEgLn9.png)
 
 #Mentionable features of DPSMate#
