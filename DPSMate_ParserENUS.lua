@@ -607,14 +607,36 @@ function DPSMate.Parser:SpellSelfBuff(msg)
 			DB:DestroyBuffs(self.player, b)
 		end
 		return
-	end	
+	end
 	for a,b in strgfind(msg, "You gain (%d+) Mana from (.+)%.") do
 		if self.procs[b] then
 			DB:BuildBuffs(self.player, self.player, b, true)
 			DB:DestroyBuffs(self.player, b)
 		end
 		return
-	end	
+	end
+	for a,b,c in strgfind(msg, "(.+) gains (%d+) Mana from (.+)%.") do
+		local mana = tnbr(b)
+		if mana and mana > 0 then
+			DB:ManaGained(a, mana, c)
+		end
+		if self.procs[c] then
+			DB:BuildBuffs(a, a, c, true)
+			DB:DestroyBuffs(a, c)
+		end
+		return
+	end
+	for a,b,c,d in strgfind(msg, "(.+) gains (%d+) Mana from (.+)'s (.+)%.") do
+		local mana = tnbr(b)
+		if mana and mana > 0 then
+			DB:ManaGained(a, mana, d)
+		end
+		if self.procs[d] then
+			DB:BuildBuffs(c, a, d, true)
+			DB:DestroyBuffs(c, d)
+		end
+		return
+	end
 end
 
 ----------------------------------------------------------------------------------
@@ -642,6 +664,7 @@ end
 --NEW function DPSMate.Parser:SpellPeriodicSelfManaGained(msg) Below fixes double data for self mana Gains
 
 function DPSMate.Parser:SpellPeriodicSelfManaGained(msg)
+	-- You gain 51 Mana from Khanviction's Mending Light.
 	for a,b,c in strgfind(msg, "You gain (%d+) Mana from (.+)'s (.+)%.") do
 		local mana = tnbr(a)
 		if mana and mana > 0 then
@@ -654,6 +677,7 @@ function DPSMate.Parser:SpellPeriodicSelfManaGained(msg)
 		return
 	end
 
+	-- You gain 20 Mana from Blessing of Wisdom.
 	for a,b in strgfind(msg, "You gain (%d+) Mana from (.+)%.") do
 		local mana = tnbr(a)
 		if mana and mana > 0 then
