@@ -2488,17 +2488,32 @@ function DPSMate.DB:ManaGained(target, manaAmount, source)
 		isMineOrGroup = true
 	end
 
+	--DPSMate:SendMessage(
+	--	"MANA CHECK DB: "
+	--	..(target or "nil")
+	--	.." / player="..(player or "nil")
+	--	.." / TargetParty="..tostring(DPSMate.Parser.TargetParty[target] ~= nil)
+	--	.." / isPet="..tostring(DPSMateUser[target] and DPSMateUser[target][4] or false)
+	--	.." / petOwnerMatches="..tostring(DPSMateUser[target] and DPSMateUser[player] and DPSMateUser[target][6] == DPSMateUser[player][1] or false)
+	--	.." / isMineOrGroup="..tostring(isMineOrGroup)
+	--	.." / CombatState="..tostring(CombatState)
+	--	.." / source="..(source or "nil")
+	--)
+
 	if not isMineOrGroup then
+		--DPSMate:SendMessage("MANA REJECT: not mine/group")
 		return
 	end
 
 	-- Do not track outside combat
 	if not CombatState then
+		--DPSMate:SendMessage("MANA REJECT: not in combat")
 		return
 	end
 
 	-- Ensure user and ability exist
 	if self:BuildUser(target, nil) or self:BuildAbility(source, nil) then
+		--DPSMate:SendMessage("MANA REJECT: BuildUser/BuildAbility")
 		return
 	end
 
@@ -2515,8 +2530,8 @@ function DPSMate.DB:ManaGained(target, manaAmount, source)
 		local abilityID = DPSMateAbility[source][1]
 		if not DPSMateManaGained[cat][userID][abilityID] then
 			DPSMateManaGained[cat][userID][abilityID] = {
-				[1] = 0, -- mana gained
-				[2] = 0, -- instances
+				[1] = 0,
+				[2] = 0,
 				["i"] = {}
 			}
 		end
@@ -2531,6 +2546,8 @@ function DPSMate.DB:ManaGained(target, manaAmount, source)
 		end
 		path["i"][time] = path["i"][time] + manaAmount
 	end
+
+	--DPSMate:SendMessage("MANA ACCEPT: "..target.." / "..source.." / "..manaAmount)
 
 	self.NeedUpdate = true
 end
