@@ -72,8 +72,12 @@ function DPSMate.Modules.ManaGained:EvalTable(user, k)
 	if not arr[user[1]] then return a, total, b end
 
 	for ability, val in pairs(arr[user[1]]) do
-		local CV = (type(val) == "table" and val[1]) or val or 0
-		temp[ability] = (temp[ability] or 0) + CV
+		if ability ~= "i" then
+			local CV = (type(val) == "table" and val[1]) or val or 0
+			if CV > 0 and DPSMate:GetAbilityById(ability) then
+				temp[ability] = (temp[ability] or 0) + CV
+			end
+		end
 	end
 
 	for ability, val in pairs(temp) do
