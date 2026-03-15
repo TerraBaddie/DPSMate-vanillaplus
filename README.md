@@ -11,7 +11,6 @@ Specifically Personal Mana Gained info (You gain) does not sync or calculate oth
 #!!THE FUTURE IS NIGH! I have it working for most of what I want and I removed the UNKNOWN ABILITY PLACEHOLDER coming back at code with a 4-6 month break helps a ton! WORKING ON TWoW with NO ERRORS PLEASE REPORT ANY ERRORS AND I CAN WORK ON THEM ON MY OWN TIMELINE! Thanks! ENJOI! LOVE TERRABADDIE! <3
 
 
-
 # DPSMate #
 #A combat analyzation tool#
 
