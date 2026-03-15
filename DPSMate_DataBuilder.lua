@@ -1035,13 +1035,29 @@ local CastsBuffer = {[1]={[1]={},[2]={}},[2]={[1]={},[2]={}},[3]={[1]={},[2]={}}
 local AAttack = DPSMate.BabbleSpell:GetTranslation("AutoAttack")
 local hackOrder, hackOrder2 = {}, {}
 function DPSMate.DB:DamageDone(Duser, Dname, Dhit, Dcrit, Dmiss, Dparry, Ddodge, Dresist, Damount, Dglance, Dblock)
-	if self:BuildUser(Duser, nil) or self:BuildAbility(Dname, nil) then return end -- Attempt to fix this problem?
-	
+	if self:BuildUser(Duser, nil) or self:BuildAbility(Dname, nil) then return end
+
+	local isMineOrGroup = false
+	if Duser == player then
+		isMineOrGroup = true
+	elseif DPSMate.Parser.TargetParty[Duser] then
+		isMineOrGroup = true
+	elseif DPSMateUser[Duser] and DPSMateUser[player] and DPSMateUser[Duser][4] and DPSMateUser[Duser][6] == DPSMateUser[player][1] then
+		isMineOrGroup = true
+	end
+
+	if not isMineOrGroup then
+		--DPSMate:SendMessage("IGNORED DamageDone: "..tostring(Duser).." / "..tostring(Dname).." / "..tostring(Damount))
+		return
+	end
+
+	--DPSMate:SendMessage("ACCEPTED DamageDone: "..tostring(Duser).." / "..tostring(Dname).." / "..tostring(Damount))
+
 	if (not CombatState and cheatCombat+10<GetTime()) then
 		DPSMate.Options:NewSegment()
+		CombatState, CombatTime = true, 0
 	end
-	CombatState, CombatTime = true, 0
-	
+
 	-- Part to take extra swings as abilities into account
 	if self.NextSwing[Duser] then
 		if Dname == AAttack and self.NextSwing[Duser][1]>0 and ((hackOrder[Duser] and windfuryab[self.NextSwing[Duser][2]]) or not windfuryab[self.NextSwing[Duser][2]]) then
@@ -1054,46 +1070,24 @@ function DPSMate.DB:DamageDone(Duser, Dname, Dhit, Dcrit, Dmiss, Dparry, Ddodge,
 			hackOrder[Duser] = false
 		end
 	end
-	
+
 	for cat, val in pairs({[1]="total", [2]="current"}) do 
 		if (not DPSMateDamageDone[cat][DPSMateUser[Duser][1]]) then
-			DPSMateDamageDone[cat][DPSMateUser[Duser][1]] = {
-				i = 0,
-			}
+			DPSMateDamageDone[cat][DPSMateUser[Duser][1]] = { i = 0 }
 		end
 		if not DPSMateDamageDone[cat][DPSMateUser[Duser][1]][DPSMateAbility[Dname][1]] then
 			DPSMateDamageDone[cat][DPSMateUser[Duser][1]][DPSMateAbility[Dname][1]] = {
-				[1] = 0, -- hit
-				[2] = 0, -- hitlow
-				[3] = 0, -- hithigh
-				[4] = 0, -- hitaverage
-				[5] = 0, -- crit
-				[6] = 0, -- critlow
-				[7] = 0, -- crithigh
-				[8] = 0, -- critaverage
-				[9] = 0, -- miss
-				[10] = 0, -- parry
-				[11] = 0, -- dodge
-				[12] = 0, -- resist 
-				[13] = 0, -- amount
-				[14] = 0,
-				[15] = 0,
-				[16] = 0,
-				[17] = 0,
-				[18] = 0,
-				[19] = 0,
-				[20] = 0,
-				[21] = 0,
-				[22] = 0, -- Casts
+				[1]=0,[2]=0,[3]=0,[4]=0,[5]=0,[6]=0,[7]=0,[8]=0,[9]=0,[10]=0,[11]=0,[12]=0,
+				[13]=0,[14]=0,[15]=0,[16]=0,[17]=0,[18]=0,[19]=0,[20]=0,[21]=0,[22]=0,
 				["i"] = {}
 			}
 		end
 		local path = DPSMateDamageDone[cat][DPSMateUser[Duser][1]][DPSMateAbility[Dname][1]]
-		-- Casts evaluation
+
 		local time = GT()
 		if CastsBuffer[1][cat][Duser] then
 			if CastsBuffer[1][cat][Duser][Dname] then
-				if time>=(CastsBuffer[1][cat][Duser][Dname]+0.1) then
+				if time >= (CastsBuffer[1][cat][Duser][Dname] + 0.1) then
 					CastsBuffer[1][cat][Duser][Dname] = time
 					path[22] = path[22] + 1
 				end
@@ -1106,6 +1100,7 @@ function DPSMate.DB:DamageDone(Duser, Dname, Dhit, Dcrit, Dmiss, Dparry, Ddodge,
 			CastsBuffer[1][cat][Duser][Dname] = time
 			path[22] = path[22] + 1
 		end
+
 		path[1] = path[1] + Dhit
 		path[5] = path[5] + Dcrit
 		path[9] = path[9] + Dmiss
@@ -1115,6 +1110,7 @@ function DPSMate.DB:DamageDone(Duser, Dname, Dhit, Dcrit, Dmiss, Dparry, Ddodge,
 		path[13] = path[13] + Damount
 		path[14] = path[14] + Dglance
 		path[18] = path[18] + Dblock
+
 		if Dhit == 1 then
 			if (Damount < path[2] or path[2] == 0) then path[2] = Damount end
 			if Damount > path[3] then path[3] = Damount end
@@ -1132,16 +1128,18 @@ function DPSMate.DB:DamageDone(Duser, Dname, Dhit, Dcrit, Dmiss, Dparry, Ddodge,
 			if Damount > path[20] then path[20] = Damount end
 			path[21] = self:WeightedAverage(path[21], Damount, path[18]-Dblock, Dblock)
 		end
+
 		DPSMateDamageDone[cat][DPSMateUser[Duser][1]]["i"] = DPSMateDamageDone[cat][DPSMateUser[Duser][1]]["i"] + Damount
-		if Damount > 0 then 
-			local time = floor(DPSMateCombatTime[val])
-			if path["i"][time] then
-				path["i"][time] = path["i"][time] + Damount
+		if Damount > 0 then
+			local t = floor(DPSMateCombatTime[val])
+			if path["i"][t] then
+				path["i"][t] = path["i"][t] + Damount
 			else
-				path["i"][time] = Damount
+				path["i"][t] = Damount
 			end
 		end
 	end
+
 	savedValue["damage"] = savedValue["damage"] + Damount
 	self.NeedUpdate = true
 end
@@ -2475,62 +2473,64 @@ function DPSMate.DB:CCBreaker(target, ability, cause)
 end
 
 function DPSMate.DB:ManaGained(target, manaAmount, source)
-    -- Prevent tracking mana gained outside of combat
-    if not CombatState then return end
+	-- Must have valid inputs
+	if not target or not manaAmount or not source then
+		return
+	end
 
-    -- Validate target and source
-    if not target or not manaAmount or not source then
-        -- DPSMate:SendMessage("ERROR: Invalid ManaGained call. Missing target, manaAmount, or source!")
-        return
-    end
+	-- Only track me / my group / their pets
+	local isMineOrGroup = false
+	if target == player then
+		isMineOrGroup = true
+	elseif DPSMate.Parser.TargetParty[target] then
+		isMineOrGroup = true
+	elseif DPSMateUser[target] and DPSMateUser[player] and DPSMateUser[target][4] and DPSMateUser[target][6] == DPSMateUser[player][1] then
+		isMineOrGroup = true
+	end
 
-    -- Ensure user and ability exist
-    if self:BuildUser(target, nil) or self:BuildAbility(source, nil) then
-        -- DPSMate:SendMessage("Skipping ManaGained logging due to BuildUser or BuildAbility failure.")
-        return
-    end
+	if not isMineOrGroup then
+		return
+	end
 
-    -- Iterate over 'total' and 'current' categories
-    for cat, val in pairs({[1] = "total", [2] = "current"}) do 
-        -- Ensure category exists in DPSMateManaGained
-        if not DPSMateManaGained[cat] then
-            DPSMateManaGained[cat] = {}
-            -- DPSMate:SendMessage("DPSMateManaGained[" .. cat .. "] was nil, initialized!")
-        end
+	-- Do not track outside combat
+	if not CombatState then
+		return
+	end
 
-        -- Ensure user exists in the table
-        local userID = DPSMateUser[target][1]
-        if not DPSMateManaGained[cat][userID] then
-            DPSMateManaGained[cat][userID] = { i = 0 }
-            -- DPSMate:SendMessage("Created new entry for user " .. target .. " in DPSMateManaGained[" .. cat .. "]")
-        end
+	-- Ensure user and ability exist
+	if self:BuildUser(target, nil) or self:BuildAbility(source, nil) then
+		return
+	end
 
-        -- Ensure ability exists for the user
-        local abilityID = DPSMateAbility[source][1]
-        if not DPSMateManaGained[cat][userID][abilityID] then
-            DPSMateManaGained[cat][userID][abilityID] = {
-                [1] = 0, -- Mana gained amount
-                [2] = 0, -- Instances
-                ["i"] = {}
-            }
-            -- DPSMate:SendMessage("Created new entry for ability " .. source .. " in DPSMateManaGained[" .. cat .. "][" .. target .. "]")
-        end
+	for cat, val in pairs({[1] = "total", [2] = "current"}) do
+		if not DPSMateManaGained[cat] then
+			DPSMateManaGained[cat] = {}
+		end
 
-        -- Update mana gained and instances count
-        local path = DPSMateManaGained[cat][userID][abilityID]
-        path[1] = path[1] + manaAmount
-        path[2] = path[2] + 1
+		local userID = DPSMateUser[target][1]
+		if not DPSMateManaGained[cat][userID] then
+			DPSMateManaGained[cat][userID] = { i = 0 }
+		end
 
-        -- Store data over time
-        local time = floor(DPSMateCombatTime[val] or 0)
-        if not path["i"][time] then
-            path["i"][time] = 0
-        end
-        path["i"][time] = path["i"][time] + manaAmount
+		local abilityID = DPSMateAbility[source][1]
+		if not DPSMateManaGained[cat][userID][abilityID] then
+			DPSMateManaGained[cat][userID][abilityID] = {
+				[1] = 0, -- mana gained
+				[2] = 0, -- instances
+				["i"] = {}
+			}
+		end
 
-        -- DPSMate:SendMessage("ManaGained Logged: " .. manaAmount .. " from " .. source .. " (User: " .. target .. ", Category: " .. cat .. ")")
-    end
+		local path = DPSMateManaGained[cat][userID][abilityID]
+		path[1] = path[1] + manaAmount
+		path[2] = path[2] + 1
 
-    -- Flag for update
-    self.NeedUpdate = true
+		local time = floor(DPSMateCombatTime[val] or 0)
+		if not path["i"][time] then
+			path["i"][time] = 0
+		end
+		path["i"][time] = path["i"][time] + manaAmount
+	end
+
+	self.NeedUpdate = true
 end
