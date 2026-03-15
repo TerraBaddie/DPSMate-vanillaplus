@@ -106,17 +106,21 @@ function DPSMate.Modules.DetailsManaGained:ScrollFrame_Update()
 		local iconF = _G("DPSMate_Details_ManaGained_Log_ScrollButton"..line.."_Icon")
 
 		if DetailsArr[lineplusoffset] ~= nil then
+			local value = ManaArr[lineplusoffset] or 0
 			local ability = DPSMate:GetAbilityById(DetailsArr[lineplusoffset])
 
-			if nameF then nameF:SetText(ability or "Unknown") end
-			if valF and DetailsTotal > 0 then
-				local value = ManaArr[lineplusoffset] or 0
-				valF:SetText(value.." ("..strformat("%.2f", (value * 100 / DetailsTotal)).."%)")
+			if ability and value > 0 then
+				if nameF then nameF:SetText(ability) end
+				if valF and DetailsTotal > 0 then
+					valF:SetText(value.." ("..strformat("%.2f", (value * 100 / DetailsTotal)).."%)")
+				end
+				if iconF then
+					iconF:SetTexture(DPSMate.BabbleSpell:GetSpellIcon(ability))
+				end
+				if btn then btn:Show() end
+			else
+				if btn then btn:Hide() end
 			end
-			if iconF and ability then
-				iconF:SetTexture(DPSMate.BabbleSpell:GetSpellIcon(ability))
-			end
-			if btn then btn:Show() end
 		else
 			if btn then btn:Hide() end
 		end
