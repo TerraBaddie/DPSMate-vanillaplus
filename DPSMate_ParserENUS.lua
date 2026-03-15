@@ -282,7 +282,8 @@ end
 function DPSMate.Parser:SpellDamageShieldsOnOthers(msg)
 	t = {}
 	for a,b,c,d in strgfind(msg, "(.+) reflects (%d+) (%a-) damage to (.+)%.") do
-		local am,ta = tnbr(b)
+		local am = tnbr(b)
+		local ta = d
 		if d == "you" then ta=self.player end
 		if npcdb:Contains(a) or strfind(a, "%s") then
 			DB:EnemyDamage(false, DPSMateEDD, d, "Reflection", 1, 0, 0, 0, 0, 0, 0, a, 0, 0)
@@ -619,24 +620,51 @@ end
 ----------------------------------------------------------------------------------
 --------------                      Mana Gains                      --------------        
 ----------------------------------------------------------------------------------
+--DEPRECIATED??? B/C DOUBLE DATA FOR SELF CGPT FIX BELOW
+--function DPSMate.Parser:SpellPeriodicSelfManaGained(msg)
+--    for amount, source in strgfind(msg, "You gain (%d+) Mana from (.+)%.") do
+--        local manaAmount = tnbr(amount)
+--        local target = self.player -- Ensure self.player is correctly defined
+--
+--        -- Send data to DPSMate_DB to track mana gained
+--        if DB and DB.ManaGained then
+--            DB:ManaGained(target, manaAmount, source)
+--        else
+--            DPSMate:SendMessage("❌ ERROR: DB.ManaGained is missing!")
+--        end
+--
+--        
+--        --DPSMate:SendMessage("Mana Gained: " .. manaAmount .. " from " .. source)
+--        
+--        return
+--    end
+--end
+--NEW function DPSMate.Parser:SpellPeriodicSelfManaGained(msg) Below fixes double data for self mana Gains
 
 function DPSMate.Parser:SpellPeriodicSelfManaGained(msg)
-    for amount, source in strgfind(msg, "You gain (%d+) Mana from (.+)%.") do
-        local manaAmount = tnbr(amount)
-        local target = self.player -- Ensure self.player is correctly defined
+	for a,b,c in strgfind(msg, "You gain (%d+) Mana from (.+)'s (.+)%.") do
+		local mana = tnbr(a)
+		if mana and mana > 0 then
+			DB:ManaGained(self.player, mana, c)
+		end
+		if self.procs[c] then
+			DB:BuildBuffs(b, self.player, c, true)
+			DB:DestroyBuffs(b, c)
+		end
+		return
+	end
 
-        -- Send data to DPSMate_DB to track mana gained
-        if DB and DB.ManaGained then
-            DB:ManaGained(target, manaAmount, source)
-        else
-            DPSMate:SendMessage("❌ ERROR: DB.ManaGained is missing!")
-        end
-
-        
-        --DPSMate:SendMessage("Mana Gained: " .. manaAmount .. " from " .. source)
-        
-        return
-    end
+	for a,b in strgfind(msg, "You gain (%d+) Mana from (.+)%.") do
+		local mana = tnbr(a)
+		if mana and mana > 0 then
+			DB:ManaGained(self.player, mana, b)
+		end
+		if self.procs[b] then
+			DB:BuildBuffs(self.player, self.player, b, true)
+			DB:DestroyBuffs(self.player, b)
+		end
+		return
+	end
 end
 
 -- You gain First Aid.
@@ -695,6 +723,7 @@ end
 -- Sivir gains 11 health from Albea's First Aid.
 -- Soulstoke gains 25 Energy from Soulstoke's Relentless Strikes Effect.
 function DPSMate.Parser:SpellPeriodicFriendlyPlayerBuffs(msg)
+	if strfind(msg, "^You gain ") then return end
 	t = {}
 	for f,a,b,c in strgfind(msg, "(.+) gains (%d+) health from (.+)'s (.+)%.") do
 		t[1]=tnbr(a)
@@ -710,6 +739,7 @@ function DPSMate.Parser:SpellPeriodicFriendlyPlayerBuffs(msg)
 		DB:DeathHistory(f, b, c.."(Periodic)", t[1], 1, 0, 1, 0)
 		return
 	end
+
 	for f,a,b in strgfind(msg, "(.+) gains (%d+) health from your (.+)%.") do 
 		t[1] = tnbr(a)
 		overheal = self:GetOverhealByName(t[1], f)
@@ -724,6 +754,7 @@ function DPSMate.Parser:SpellPeriodicFriendlyPlayerBuffs(msg)
 		DB:DeathHistory(f, self.player, b.."(Periodic)", t[1], 1, 0, 1, 0)
 		return
 	end
+
 	for f,a,b in strgfind(msg, "(.+) gains (%d+) health from (.+)%.") do 
 		t[1] = tnbr(a)
 		overheal = self:GetOverhealByName(t[1], f)
@@ -738,6 +769,34 @@ function DPSMate.Parser:SpellPeriodicFriendlyPlayerBuffs(msg)
 		DB:DeathHistory(f, f, b.."(Periodic)", t[1], 1, 0, 1, 0)
 		return
 	end
+
+	for f,a,b,d in strgfind(msg, "(.+) gains (%d+) Mana from (.+)'s (.+)%.") do
+		local mana = tnbr(a)
+		
+		if mana and mana > 0 then
+			DB:ManaGained(f, mana, d)
+		end
+		
+		if self.procs[d] then
+			DB:BuildBuffs(b, f, d, true)
+			DB:DestroyBuffs(b, d)
+		end
+		return
+	end
+
+	for f,a,b in strgfind(msg, "(.+) gains (%d+) Mana from your (.+)%.") do
+		local mana = tnbr(a)
+		if mana and mana > 0 then
+			DB:ManaGained(f, mana, b or "Unknown")
+		end
+		
+		if self.procs[b] then
+			DB:BuildBuffs(self.player, f, b, true)
+			DB:DestroyBuffs(self.player, b)
+		end
+		return
+	end
+
 	for f,a in strgfind(msg, "(.-) gains (.+)%.") do
 		if strfind(a, "from") then return end
 		if self.BuffExceptions[a] then return end;
@@ -829,11 +888,30 @@ function DPSMate.Parser:SpellHostilePlayerBuff(msg)
 		return 
 	end
 	for a,b,c,d in strgfind(msg, "(.+) gains (%d+) Mana from (.+)'s (.+)%.") do
+		local mana = tnbr(b)
+		
+		if mana and mana > 0 then
+			DB:ManaGained(a, mana, d)
+		end
+	
 		if self.procs[d] then
 			DB:BuildBuffs(c, a, d, true)
 			DB:DestroyBuffs(c, d)
 		end
 		return 
+	end
+	for a,b,c in strgfind(msg, "(.+) gains (%d+) Mana from your (.+)%.") do
+		local mana = tnbr(b)
+
+		if mana then
+			DB:ManaGained(a, mana, c)
+		end
+
+		if self.procs[c] then
+		DB:BuildBuffs(self.player, a, c, true)
+		DB:DestroyBuffs(self.player, c)
+		end
+		return
 	end
 end
 
