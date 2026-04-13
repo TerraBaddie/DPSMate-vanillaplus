@@ -190,14 +190,24 @@ function DPSMate.Modules.DetailsDamageTaken:ScrollFrame_Update(comp, cname)
 end
 
 function DPSMate.Modules.DetailsDamageTaken:SelectCreatureButton(i, comp, cname)
-	if not comp then comp = DPSMate_Details_DamageTaken.LastScroll or "" end
+	if not comp then
+		comp = DPSMate_Details_DamageTaken.LastScroll or ""
+	end
+
 	local line, lineplusoffset
 	local path = "DPSMate_Details_"..comp.."DamageTaken_Log"
 	local obj = _G(path.."_ScrollFrame")
-	i = i + FauxScrollFrame_GetOffset(_G("DPSMate_Details_"..comp.."DamageTaken_LogCreature_ScrollFrame")) or obj.index
+	local creatureScroll = _G("DPSMate_Details_"..comp.."DamageTaken_LogCreature_ScrollFrame")
+
+	if not obj or not creatureScroll then
+		return
+	end
+
+	i = i + (FauxScrollFrame_GetOffset(creatureScroll) or obj.index or 0)
 	obj.index = i
+
 	local uArr, dArr, dTot, dSel = DetailsArr, DmgArr, DetailsTotal, DetailsSelected
-	if comp ~= "" and comp~=nil then
+	if comp ~= "" and comp ~= nil then
 		uArr = DetailsArrComp
 		dArr = DmgArrComp
 		dTot = DetailsTotalComp
@@ -207,25 +217,73 @@ function DPSMate.Modules.DetailsDamageTaken:SelectCreatureButton(i, comp, cname)
 		DetailsSelected = i
 		dSel = DetailsSelected
 	end
-	local pet, len = "", DPSMate:TableLength(dArr[i][2])
-	local coeff = len-10
-	if not obj.oset or obj.oset<0 then
+
+	-- Safety checks for incomplete/malformed data
+	if not dArr or not dArr[i] then
+		for line = 1, 10 do
+			_G(path.."_ScrollButton"..line):Hide()
+			_G(path.."_ScrollButton"..line.."_selected"):Hide()
+		end
+		for p = 1, 8 do
+			local sel = _G("DPSMate_Details_"..comp.."DamageTaken_LogCreature_ScrollButton"..p.."_selected")
+			if sel then
+				sel:Hide()
+			end
+		end
+		return
+	end
+
+	if not dArr[i][2] then
+		dArr[i][2] = {}
+	end
+	if not dArr[i][3] then
+		dArr[i][3] = {}
+	end
+	if not dTot or dTot == 0 then
+		dTot = 1
+	end
+
+	local pet = ""
+	local len = DPSMate:TableLength(dArr[i][2]) or 0
+	local coeff = len - 10
+
+	if not obj.oset or obj.oset < 0 then
 		obj.oset = 0
 	end
-	if coeff>0 then
-		if (coeff-obj.oset)<0 then
+
+	if coeff > 0 then
+		if (coeff - obj.oset) < 0 then
 			obj.oset = coeff
 		end
 		FauxScrollFrame_SetOffset(obj, obj.oset)
+	else
+		FauxScrollFrame_SetOffset(obj, 0)
 	end
-	FauxScrollFrame_Update(obj,len,10,24)
-	for line=1,10 do
-		lineplusoffset = line + FauxScrollFrame_GetOffset(obj)
-		if dArr[i][2][lineplusoffset] ~= nil then
-			local ability = DPSMate:GetAbilityById(dArr[i][2][lineplusoffset])
+
+	FauxScrollFrame_Update(obj, len, 10, 24)
+
+	for line = 1, 10 do
+		lineplusoffset = line + (FauxScrollFrame_GetOffset(obj) or 0)
+
+		if dArr[i][2] and dArr[i][2][lineplusoffset] ~= nil then
+			local spellId = dArr[i][2][lineplusoffset]
+			local dmgVal = (dArr[i][3] and dArr[i][3][lineplusoffset]) or 0
+			local ability = DPSMate:GetAbilityById(spellId)
+
+			if not ability then
+				ability = "Unknown"
+			end
+
 			_G(path.."_ScrollButton"..line.."_Name"):SetText(ability)
-			_G(path.."_ScrollButton"..line.."_Value"):SetText(dArr[i][3][lineplusoffset].." ("..strformat("%.2f", (dArr[i][3][lineplusoffset]*100/dTot)).."%)")
-			_G(path.."_ScrollButton"..line.."_Icon"):SetTexture(DPSMate.BabbleSpell:GetSpellIcon(strsub(ability, 1, (strfind(ability, "%(") or 0)-1) or ability))
+			_G(path.."_ScrollButton"..line.."_Value"):SetText(dmgVal.." ("..strformat("%.2f", (dmgVal * 100 / dTot)).."%)")
+
+			local icon = DPSMate.BabbleSpell:GetSpellIcon((strfind(ability, "%(") and strsub(ability, 1, (strfind(ability, "%(") - 1))) or ability)
+			if icon then
+				_G(path.."_ScrollButton"..line.."_Icon"):SetTexture(icon)
+			else
+				_G(path.."_ScrollButton"..line.."_Icon"):SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+			end
+
 			if len < 10 then
 				_G(path.."_ScrollButton"..line):SetWidth(235)
 				_G(path.."_ScrollButton"..line.."_Name"):SetWidth(125)
@@ -233,27 +291,45 @@ function DPSMate.Modules.DetailsDamageTaken:SelectCreatureButton(i, comp, cname)
 				_G(path.."_ScrollButton"..line):SetWidth(220)
 				_G(path.."_ScrollButton"..line.."_Name"):SetWidth(110)
 			end
+
 			_G(path.."_ScrollButton"..line):Show()
 		else
 			_G(path.."_ScrollButton"..line):Hide()
 		end
+
 		_G(path.."_ScrollButton"..line.."_selected"):Hide()
+	end
+
+	if _G(path.."_ScrollButton1_selected") then
 		_G(path.."_ScrollButton1_selected"):Show()
 	end
-	for p=1, 8 do
-		_G("DPSMate_Details_"..comp.."DamageTaken_LogCreature_ScrollButton"..p.."_selected"):Hide()
+
+	for p = 1, 8 do
+		local sel = _G("DPSMate_Details_"..comp.."DamageTaken_LogCreature_ScrollButton"..p.."_selected")
+		if sel then
+			sel:Hide()
+		end
 	end
-	_G("DPSMate_Details_"..comp.."DamageTaken_LogCreature_ScrollButton"..(i-FauxScrollFrame_GetOffset(_G("DPSMate_Details_"..comp.."DamageTaken_LogCreature_ScrollFrame"))).."_selected"):Show()
-	self:SelectDetailsButton(i,1, comp, cname)
+
+	local creatureSelIndex = i - (FauxScrollFrame_GetOffset(creatureScroll) or 0)
+	local creatureSel = _G("DPSMate_Details_"..comp.."DamageTaken_LogCreature_ScrollButton"..creatureSelIndex.."_selected")
+	if creatureSel then
+		creatureSel:Show()
+	end
+
+	if len > 0 then
+		self:SelectDetailsButton(i, 1, comp, cname)
+	end
+
 	if toggle3 then
 		if toggle then
-			if comp ~= "" and comp~=nil then
+			if comp ~= "" and comp ~= nil then
 				self:UpdateStackedGraph(g3, "Compare", DetailsUserComp)
 			else
 				self:UpdateStackedGraph(g)
 			end
 		else
-			if comp ~= "" and comp~=nil then
+			if comp ~= "" and comp ~= nil then
 				self:UpdateLineGraph(g4, "Compare", DetailsUserComp)
 			else
 				self:UpdateLineGraph(g2, "")
