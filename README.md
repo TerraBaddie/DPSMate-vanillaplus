@@ -1,5 +1,7 @@
 RENAME FOLDER TO DPSMate
 
+DELETE YOUR OLD WTF DPSMate.lua files before reporting any lua errors this has been heavily changed and if you have data from another DPSMate connecting with this one can corrupt WTF data files and give LUA Errors
+
 #!!ORIGINAL CREATOR: https://bitbucket.org/tomdy/dpsmate/downloads/
 
 #!!DIRECT ZIP TO ORIGIN: https://bitbucket.org/tomdy/dpsmate/get/6d49147d8dcb.zip
