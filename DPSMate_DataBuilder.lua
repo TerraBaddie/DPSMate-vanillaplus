@@ -2530,15 +2530,23 @@ function DPSMate.DB:ManaGained(target, manaAmount, source)
 		local abilityID = DPSMateAbility[source][1]
 		if not DPSMateManaGained[cat][userID][abilityID] then
 			DPSMateManaGained[cat][userID][abilityID] = {
-				[1] = 0,
-				[2] = 0,
+				[1] = 0, -- Total mana
+				[2] = 0, -- Number of gains
+				[3] = nil, -- Minimum gain
+				[4] = nil, -- Maximum gain
 				["i"] = {}
 			}
 		end
 
 		local path = DPSMateManaGained[cat][userID][abilityID]
-		path[1] = path[1] + manaAmount
-		path[2] = path[2] + 1
+		path[1] = (path[1] or 0) + manaAmount
+		path[2] = (path[2] or 0) + 1
+		if not path[3] or manaAmount < path[3] then
+			path[3] = manaAmount
+		end
+		if not path[4] or manaAmount > path[4] then
+			path[4] = manaAmount
+		end
 
 		local time = floor(DPSMateCombatTime[val] or 0)
 		if not path["i"][time] then
