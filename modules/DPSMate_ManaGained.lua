@@ -158,15 +158,11 @@ end
 -- OPEN DETAILS WINDOWS
 ----------------------------------------------------
 function DPSMate.Modules.ManaGained:OpenDetails(obj, key, bool)
-	-- We only have a simple detail window + simple compare
 	if bool then
 		if DPSMate.Modules.DetailsManaGained and DPSMate.Modules.DetailsManaGained.UpdateCompare then
 			DPSMate.Modules.DetailsManaGained:UpdateCompare(obj, key, bool)
 		end
 	else
-		if DPSMate.Modules.DetailsManaGained and DPSMate.Modules.DetailsManaGained:UpdateDetails(obj, key) then
-			-- nothing extra
-		end
 		if DPSMate.Modules.DetailsManaGained and DPSMate.Modules.DetailsManaGained.UpdateDetails then
 			DPSMate.Modules.DetailsManaGained:UpdateDetails(obj, key)
 		end
