@@ -14,6 +14,11 @@ UPDATED!!! Now gathers all raid and party member's Mana Gained in combat log. YA
 #!!THE FUTURE IS NIGH! I have it working for most of what I want and I removed the UNKNOWN ABILITY PLACEHOLDER coming back at code with a 4-6 month break helps a ton! WORKING ON TWoW with NO ERRORS PLEASE REPORT ANY ERRORS AND I CAN WORK ON THEM ON MY OWN TIMELINE! Thanks! ENJOI! LOVE TERRABADDIE! <3
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7ef2c918-90f9-41f8-b6a7-f6fdb7d2a068" />
 
+MOST RECENT UPDATE FIXED PIE CHART AND LINE GRAPH REPORT ANY ERRORS DELETE WTF/DPSMate.lua files before logging in data storage for min max average for Mana Gained changed
+Image below:
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5f24c274-e5b1-4526-82fa-a5e59cf3c0c3" />
+
+
 
 # DPSMate #
 #A combat analyzation tool#
