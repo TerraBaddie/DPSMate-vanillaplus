@@ -374,6 +374,12 @@ local UN = UnitName
 function DPSMate.Sync:OnEvent(event)
 	if event == "CHAT_MSG_ADDON" then
 		if DB.loaded then
+			-- Sync packets can arrive immediately after joining a raid, before the
+			-- sender has been added to DPSMateUser. Build the sender first so all
+			-- sync handlers can safely resolve DPSMateUser[arg4][1].
+			if not arg4 or arg4 == "" then return end
+			DB:BuildUser(arg4, nil)
+
 			if DPSMateSettings["sync"] then
 				if arg4 == player then return end 
 				if self.Exec[arg1] then
@@ -589,9 +595,10 @@ function DPSMate.Sync:EDStatIn(arr, arg2, arg4)
 	t = {}
 	strgsub(arg2, "(.-),", func)
 
-	DB:BuildUser(t[1], nil)
+	-- Ignore incomplete packets and ensure every referenced record exists.
+	if DB:BuildUser(t[1], nil) or DB:BuildUser(arg4, nil) or DB:BuildAbility(t[4], nil) then return end
+	if not DPSMateUser[t[1]] or not DPSMateUser[arg4] or not DPSMateAbility[t[4]] then return end
 
-	DB:BuildAbility(t[4])
 	local userid, userid2, abid = DPSMateUser[t[1]][1], DPSMateUser[arg4][1], DPSMateAbility[t[4]][1]
 	if not Arrays[arr][userid] then return end
 	if not Arrays[arr][userid][userid2] then return end
