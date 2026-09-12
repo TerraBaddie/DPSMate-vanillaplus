@@ -4,7 +4,8 @@
 ## Notes-deDE: DPSMate ist ein Analysewerkzeug, das hilfreiche Graphen und Statistiken bereitstellt, um den Kampf zu evaluieren.
 ## Author: Shino <Synced> - Kronos
 ## SavedVariables: DPSMateSettings
-## SavedVariablesPerCharacter: DPSMateUser, DPSMateAbility, DPSMateDamageDone, DPSMateEDT, DPSMateEDD, DPSMateDamageTaken, DPSMateDispels, DPSMateInterrupts, DPSMateDeaths, DPSMateEHealing, DPSMateTHealing, DPSMateHealingTaken, DPSMateEHealingTaken, DPSMateOverhealing, DPSMateOverhealingTaken, DPSMateAbsorbs, DPSMateThreat, DPSMateAurasGained, DPSMateCombatTime, DPSMateHistory, DPSMateAttempts, DPSMatePlayer, DPSMateLoot, DPSMateFails, DPSMateCCBreaker, DPSMateManaGained
+## SavedVariablesPerCharacter: DPSMateUser, DPSMateAbility, DPSMateCombatTime, DPSMateAttempts, DPSMatePlayer, DPSMateLoot
+## Dependencies: DPSMate_DataDamage, DPSMate_DataHealing, DPSMate_DataUtility, DPSMate_DataResources, DPSMate_DataHistory
 ## OptionalDeps: KLHThreatMeter
 
 libs\AceLibrary\AceLibrary.lua
@@ -16,6 +17,7 @@ libs\Babble-Boss-2.3\Babble-Boss-2.3.lua
 libs\NPCDB-1.0\NPCDB-1.0.lua
 
 DPSMate.lua
+DPSMate_Storage.lua
 
 localization\enUS.lua
 localization\deDE.lua
@@ -62,6 +64,8 @@ modules\DPSMate_HPS.lua
 modules\DPSMate_Interrupts.lua
 modules\DPSMate_ManaEfficiency.lua
 modules\DPSMate_ManaGained.lua
+modules\DPSMate_EnergyGained.lua
+modules\DPSMate_RageGained.lua
 modules\DPSMate_ManaLost.lua
 modules\DPSMate_Overhealing.lua
 modules\DPSMate_Procs.lua
@@ -199,6 +203,10 @@ modules\DPSMate_Details_ThreatTotal.lua
 modules\DPSMate_Details_ThreatTotal.xml
 modules\DPSMate_Details_ManaGained.lua
 modules\DPSMate_Details_ManaGained.xml
+modules\DPSMate_Details_EnergyGained.lua
+modules\DPSMate_Details_EnergyGained.xml
+modules\DPSMate_Details_RageGained.lua
+modules\DPSMate_Details_RageGained.xml
 
 DPSMate_Frame.xml
 DPSMate_Options.xml

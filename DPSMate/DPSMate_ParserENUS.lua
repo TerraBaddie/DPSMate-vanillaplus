@@ -1134,3 +1134,45 @@ function DPSMate.Parser:PetSpellDamage(msg)
 		return
 	end
 end
+
+
+----------------------------------------------------------------------------------
+--------------                  Energy / Rage Gains                 --------------
+----------------------------------------------------------------------------------
+function DPSMate.Parser:SpellEnergyRageGained(msg)
+    -- Self: You gain 25 Energy from Relentless Strikes Effect.
+    for amount, source in strgfind(msg, "You gain (%d+) Energy from (.+)%.") do
+        amount = tnbr(amount)
+        if amount and amount > 0 then DB:EnergyGained(self.player, amount, source) end
+        return
+    end
+    -- Self: You gain 10 Rage from Bloodrage.
+    for amount, source in strgfind(msg, "You gain (%d+) Rage from (.+)%.") do
+        amount = tnbr(amount)
+        if amount and amount > 0 then DB:RageGained(self.player, amount, source) end
+        return
+    end
+    -- Group: Player gains 25 Energy from Owner's Ability.
+    for target, amount, owner, source in strgfind(msg, "(.+) gains (%d+) Energy from (.+)'s (.+)%.") do
+        amount = tnbr(amount)
+        if amount and amount > 0 then DB:EnergyGained(target, amount, source) end
+        return
+    end
+    -- Group: Player gains 10 Rage from Owner's Ability.
+    for target, amount, owner, source in strgfind(msg, "(.+) gains (%d+) Rage from (.+)'s (.+)%.") do
+        amount = tnbr(amount)
+        if amount and amount > 0 then DB:RageGained(target, amount, source) end
+        return
+    end
+    -- Group/simple source forms.
+    for target, amount, source in strgfind(msg, "(.+) gains (%d+) Energy from (.+)%.") do
+        amount = tnbr(amount)
+        if amount and amount > 0 then DB:EnergyGained(target, amount, source) end
+        return
+    end
+    for target, amount, source in strgfind(msg, "(.+) gains (%d+) Rage from (.+)%.") do
+        amount = tnbr(amount)
+        if amount and amount > 0 then DB:RageGained(target, amount, source) end
+        return
+    end
+end

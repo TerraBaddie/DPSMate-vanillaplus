@@ -507,5 +507,7 @@ DPSMate.L["bordercolor"] = "Border color"
 DPSMate.L["bordercolorTooltip"] = "Adjust the border color."
 
 DPSMate.L["managained"] = "Mana Gained"
+DPSMate.L["energygained"] = "Energy Gained"
+DPSMate.L["ragegained"] = "Rage Gained"
 DPSMate.L["realtimemana"] = 'Select mana for this frame.'
 DPSMate.L["mana"] = "Mana"

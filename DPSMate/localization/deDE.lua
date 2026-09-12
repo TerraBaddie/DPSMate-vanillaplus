@@ -504,3 +504,5 @@ if (GetLocale() == "deDE") then
 	DPSMate.L["bordercolor"] = "Randfarbe"
 	DPSMate.L["bordercolorTooltip"] = "Gestalte die Randfarbe."
 end
+DPSMate.L["energygained"] = "Energy Gained"
+DPSMate.L["ragegained"] = "Rage Gained"

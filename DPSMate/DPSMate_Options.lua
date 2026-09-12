@@ -837,6 +837,8 @@ function DPSMate.Options:PopUpAccept(bool, bypass)
 			DPSMateInterrupts = {[1]={},[2]={}}
 			DPSMateAurasGained = {[1]={},[2]={}}
 			DPSMateManaGained = {[1]={},[2]={}}
+			DPSMateEnergyGained = {[1]={},[2]={}}
+			DPSMateRageGained = {[1]={},[2]={}}
 			DPSMateThreat = {[1]={},[2]={}}
 			DPSMateFails = {[1]={},[2]={}}
 			DPSMateCCBreaker = {[1]={},[2]={}}
@@ -858,6 +860,8 @@ function DPSMate.Options:PopUpAccept(bool, bypass)
 				Dispels = {},
 				Auras = {},
 				ManaGained = {},
+				EnergyGained = {},
+				RageGained = {},
 				Threat = {},
 				Fails = {},
 				CCBreaker = {}
@@ -920,6 +924,8 @@ function DPSMate.Options:PopUpAccept(bool, bypass)
 			DPSMateInterrupts[2] = {}
 			DPSMateAurasGained[2] = {}
 			DPSMateManaGained[2] = {}
+			DPSMateEnergyGained[2] = {}
+			DPSMateRageGained[2] = {}
 			DPSMateThreat[2] = {}
 			DPSMateFails[2] = {}
 			DPSMateCCBreaker[2] = {}
@@ -960,6 +966,8 @@ function DPSMate.Options:PopUpAccept(bool, bypass)
 		DPSMate.Modules.AurasUptimers.DB = DPSMateAurasGained
 		DPSMate.Modules.Procs.DB = DPSMateAurasGained
 		DPSMate.Modules.ManaGained.DB = DPSMateManaGained
+		DPSMate.Modules.EnergyGained.DB = DPSMateEnergyGained
+		DPSMate.Modules.RageGained.DB = DPSMateRageGained
 		DPSMate.Modules.Casts.DB = DPSMateEDT
 		DPSMate.Modules.Threat.DB = DPSMateThreat
 		DPSMate.Modules.TPS.DB = DPSMateThreat
@@ -1492,7 +1500,7 @@ function DPSMate.Options:Report()
 	DPSMate_Report:Hide()
 end
 
-local AbilityModes = {"damage", "dps", "healing", "hps", "OHPS", "overhealing", "effectivehealing", "effectivehps", "deaths", "interrupts", "dispels", "decurses", "curedisease", "curepoison", "liftmagic", "aurasgained", "auraslost", "managained", "aurasuptime", "procs", "casts", "ccbreaker"}
+local AbilityModes = {"damage", "dps", "healing", "hps", "OHPS", "overhealing", "effectivehealing", "effectivehps", "deaths", "interrupts", "dispels", "decurses", "curedisease", "curepoison", "liftmagic", "aurasgained", "auraslost", "managained", "energygained", "ragegained", "aurasuptime", "procs", "casts", "ccbreaker"}
 function DPSMate.Options:ReportUserDetails(obj, channel, name)
 	local Key, user = obj:GetParent():GetParent():GetParent().Key, obj.user
 	local _, cbt, ecbt = DPSMate:GetMode(Key)
@@ -1713,6 +1721,8 @@ function DPSMate.Options:NewSegment(segname)
 		DPSMateDispels[2] = {}
 		DPSMateAurasGained[2] = {}
 		DPSMateManaGained[2] = {}
+		DPSMateEnergyGained[2] = {}
+		DPSMateRageGained[2] = {}
 		DPSMateThreat[2] = {}
 		DPSMateFails[2] = {}
 		DPSMateCCBreaker[2] = {}
@@ -1725,24 +1735,26 @@ end
 
 function DPSMate.Options:CreateSegment(name)
 	-- Need to add a new check
-	local modes = {["DMGDone"] = DPSMateDamageDone[2], ["DMGTaken"] = DPSMateDamageTaken[2], ["EDDone"] = DPSMateEDD[2], ["EDTaken"] = DPSMateEDT[2], ["THealing"] = DPSMateTHealing[2], ["EHealing"] = DPSMateEHealing[2], ["OHealing"] = DPSMateOverhealing[2], ["EHealingTaken"] = DPSMateEHealingTaken[2], ["THealingTaken"] = DPSMateHealingTaken[2], ["Absorbs"] = DPSMateAbsorbs[2], ["Deaths"] = DPSMateDeaths[2], ["Interrupts"] = DPSMateInterrupts[2], ["Dispels"] = DPSMateDispels[2], ["Auras"] = DPSMateAurasGained[2], ["ManaGained"] = DPSMateManaGained[2]}
-	
+	local modes = {["DMGDone"] = DPSMateDamageDone[2], ["DMGTaken"] = DPSMateDamageTaken[2], ["EDDone"] = DPSMateEDD[2], ["EDTaken"] = DPSMateEDT[2], ["THealing"] = DPSMateTHealing[2], ["EHealing"] = DPSMateEHealing[2], ["OHealing"] = DPSMateOverhealing[2], ["EHealingTaken"] = DPSMateEHealingTaken[2], ["THealingTaken"] = DPSMateHealingTaken[2], ["Absorbs"] = DPSMateAbsorbs[2], ["Deaths"] = DPSMateDeaths[2], ["Interrupts"] = DPSMateInterrupts[2], ["Dispels"] = DPSMateDispels[2], ["Auras"] = DPSMateAurasGained[2], ["ManaGained"] = DPSMateManaGained[2], ["EnergyGained"] = DPSMateEnergyGained[2], ["RageGained"] = DPSMateRageGained[2]}
+	local limit = DPSMateSettings["datasegments"] or 8
+
 	tinsert(DPSMateHistory["names"], 1, name.." - "..GameTime_GetTime())
+	while DPSMate:TableLength(DPSMateHistory["names"]) > limit do
+		tremove(DPSMateHistory["names"], limit + 1)
+	end
+
 	for cat, val in pairs(modes) do
 		tinsert(DPSMateHistory[cat], 1, DPSMate:CopyTable(val))
-		if DPSMate:TableLength(DPSMateHistory[cat])>DPSMateSettings["datasegments"] then
-			for i=DPSMateSettings["datasegments"]+1, DPSMate:TableLength(DPSMateHistory[cat]) do
-				tremove(DPSMateHistory[cat], i)
-			end
-			tremove(DPSMateHistory[cat], DPSMateSettings["datasegments"]+1)
-		end
-		if DPSMate:TableLength(DPSMateCombatTime["segments"])>DPSMateSettings["datasegments"] then
-			for i=DPSMateSettings["datasegments"]+1, DPSMate:TableLength(DPSMateCombatTime["segments"]) do
-				tremove(DPSMateCombatTime["segments"], i)
-			end
+		while DPSMate:TableLength(DPSMateHistory[cat]) > limit do
+			tremove(DPSMateHistory[cat], limit + 1)
 		end
 	end
+
 	tinsert(DPSMateCombatTime["segments"], 1, {[1]=DPSMateCombatTime["current"], [2]=DPSMateCombatTime["effective"][2]})
+	while DPSMate:TableLength(DPSMateCombatTime["segments"]) > limit do
+		tremove(DPSMateCombatTime["segments"], limit + 1)
+	end
+
 	DPSMate.Options:InitializeSegments()
 end
 
