@@ -1,4 +1,11 @@
-RENAME FOLDER TO DPSMate
+INSTALLATION:
+<img width="986" height="654" alt="image" src="https://github.com/user-attachments/assets/76210869-010f-40da-9cce-9052153778c1" />
+
+
+6 folders should be in AddOns folder for DPSMate!!!
+
+(STORAGE_SPLIT1 split data storage acrosss 6 Database files now so 1 file doesn't get too big)
+
 
 DELETE YOUR OLD WTF DPSMate.lua files before reporting any lua errors this has been heavily changed and if you have data from another DPSMate connecting with this one can corrupt WTF data files and give LUA Errors
 
